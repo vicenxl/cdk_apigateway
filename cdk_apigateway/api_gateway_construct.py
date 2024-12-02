@@ -20,7 +20,7 @@ class ApiGatewayConstruct(Construct):
         )
 
     def add_authorizer(self, authorizer_name: str, authorizer_function: _lambda.Function) -> apigateway.CfnAuthorizer:
-        """Método para añadir un authorizer"""
+        """Método para añadir un authorizer a bajo nivel"""
          # Obtener la región del stack
         region = Stack.of(self).region
         authorizer = apigateway.CfnAuthorizer(
@@ -38,13 +38,7 @@ class ApiGatewayConstruct(Construct):
         return authorizer
     
     def add_authorizer_v2(self, authorizer_name: str, authorizer_function: _lambda.Function) -> apigateway.RequestAuthorizer:
-        """Método para añadir un authorizer"""
-        # Grant API Gateway permission to invoke the Lambda function
-        #authorizer_function.add_permission(
-        #    "ApiGatewayInvoke",
-        #    principal=iam.ServicePrincipal("apigateway.amazonaws.com"),
-        #    action="lambda:InvokeFunction"
-        #)
+        """Método para añadir un authorizer a alto nivel"""
         # Create Lambda Authorizer Token Type
         authorizer = apigateway.TokenAuthorizer(
             self, authorizer_name,
