@@ -19,6 +19,12 @@ class CdkApigatewayStack(Stack):
         table_name = "vouchers"
         voucher_table = VoucherTable(self, table_name)
         print(f"Table ARN: {voucher_table.table.table_arn}")
+        print(f"Table NAME: {voucher_table.table.table_name}")
+
+        environment_l = {
+            "TABLE_NAME": table_name,
+            "REGION": "eu-west-1"
+        }
         
         # Creamos las lambdas que vamos a usar
         my_lambda1 = LambdaConstruct(
@@ -26,7 +32,8 @@ class CdkApigatewayStack(Stack):
             "MyCustomLambda1",
             handler_file="new_voucher.mjs",
             function_name="voucherGeneratorLambda",
-            table_arn=voucher_table.table.table_arn
+            table_arn=voucher_table.table.table_arn,
+            environment=environment_l
         )
         print(f"Lambda ARN: {my_lambda1.lambda_function.function_arn}")
 
@@ -35,7 +42,8 @@ class CdkApigatewayStack(Stack):
             "MyCustomLambda2",
             handler_file="redeem_voucher.mjs",
             function_name="redeemVoucherLambda",  
-            table_arn=voucher_table.table.table_arn
+            table_arn=voucher_table.table.table_arn,
+            environment=environment_l
         )
         print(f"Lambda ARN: {my_lambda2.lambda_function.function_arn}")
 
@@ -44,7 +52,8 @@ class CdkApigatewayStack(Stack):
             "MyCustomLambda3",
             handler_file="get_voucher_code.mjs",
             function_name="getInfoVoucherByCodeLambda",
-            table_arn=voucher_table.table.table_arn
+            table_arn=voucher_table.table.table_arn,
+            environment=environment_l
         )
         print(f"Lambda ARN: {my_lambda3.lambda_function.function_arn}")
 
@@ -116,7 +125,7 @@ class CdkApigatewayStack(Stack):
             ),
             authorization_type=apigateway.AuthorizationType.CUSTOM,
             authorizer=authorizer,
-             method_responses=[
+            method_responses=[
                 apigateway.MethodResponse(
                     status_code="200",
                     response_models={
