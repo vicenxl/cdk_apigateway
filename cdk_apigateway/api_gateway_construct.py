@@ -2,7 +2,8 @@ from aws_cdk import (
     aws_apigateway as apigateway,
     aws_lambda as _lambda,
     Stack,
-    aws_iam as iam
+    aws_iam as iam,
+    aws_logs as logs
 )
 import logging
 from constructs import Construct
@@ -12,10 +13,37 @@ class ApiGatewayConstruct(Construct):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        #Creamos el loggroup
+        log_group = logs.LogGroup(
+            self,
+            "ApiGatewayLogGroup",
+            log_group_name="MyVoucherAPILogGroup",
+            retention=logs.RetentionDays.ONE_WEEK  # Retención de una semana
+            ) 
+
         # Crear el API Gateway REST API
         self.api = apigateway.RestApi(
             self, 'MyApiGateway',
             rest_api_name='MyVoucherAPI',
+            endpoint_configuration=apigateway.EndpointConfiguration(
+                types=[apigateway.EndpointType.REGIONAL]
+            ),
+            deploy_options=apigateway.StageOptions(
+                access_log_destination=apigateway.LogGroupLogDestination(log_group),
+                access_log_format=apigateway.AccessLogFormat.json_with_standard_fields(
+                        caller=True,
+                        http_method=True,
+                        ip=True,
+                        protocol=True,
+                        request_time=True,
+                        resource_path=True,
+                        response_length=True,
+                        status=True,
+                        user=True,
+                ),
+                logging_level=apigateway.MethodLoggingLevel.INFO,  # Cambia a ERROR si lo prefieres
+                data_trace_enabled=True  # Registra cuerpo de solicitudes y respuestas
+            ),
             description='API Gateway Vouchers that managed the logic redemption burning coupons asociated with amounts of money'
         )
 
