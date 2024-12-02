@@ -34,8 +34,9 @@ export const handler = async (event) => {
             ]
         };
         authResponse.policyDocument = policyDocument;
+        console.log('Generated policyDocument:', JSON.stringify(policyDocument, null, 2));
     }
-  
+    console.log('Return authResponse:', JSON.stringify(authResponse, null, 2));
     return authResponse;
   }
   

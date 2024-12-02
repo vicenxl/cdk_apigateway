@@ -1,15 +1,15 @@
 // index.mjs
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, UpdateCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 
 export const handler = async (event) => {
     console.log('Event received:', JSON.stringify(event));
+    const code = event.code;
     try {
-        const code = event.code;
 
         if (typeof code !== 'string' || code.trim() === '') 
             throw new Error('The field "code" is required for redemption!!');
@@ -30,7 +30,7 @@ export const handler = async (event) => {
             '#status': 'status'
             },
             ExpressionAttributeValues: {
-                ':status': 'inactive',
+                ':status': 'redeemed',
                 ':dateRedemption': new Date().toISOString(),
                 ':activeStatus': 'active'
             },
@@ -55,17 +55,33 @@ export const handler = async (event) => {
         console.error('Error:', error);
         let statusCode = 500;
         let message = 'Error processing request';
+        let voucherDetails = null;
 
         if (error.name === 'ConditionalCheckFailedException') {
             statusCode = 400;
-            message = 'Voucher cannot be redeemed. It may not exist or is already inactive.';
+            message = 'Voucher cannot be redeemed. It may not exist or is already redeemed.';
+             // Fetch the voucher details
+             try {
+                const getCommand = new GetCommand({
+                    TableName: process.env.TABLE_NAME,
+                    Key: {
+                        voucherID: code
+                    }
+                });
+                console.log('getCommand:', JSON.stringify(getCommand));
+                const getResponse = await docClient.send(getCommand);
+                voucherDetails = getResponse.Item;
+            } catch (getError) {
+                console.error('Error fetching voucher details:', getError);
+            }
         }
 
         return {
             statusCode: statusCode,
             body: JSON.stringify({
                 message: message,
-                error: error.message
+                error: error.message,
+                voucher: voucherDetails
             }),
         };
     }

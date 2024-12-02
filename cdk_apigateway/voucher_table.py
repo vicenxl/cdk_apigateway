@@ -9,6 +9,10 @@ class VoucherTable:
             scope,
             id,
             table_name=id,
+            sort_key=dynamodb.Attribute(
+                name="creationDate",
+                type=dynamodb.AttributeType.STRING
+            ),
             partition_key=dynamodb.Attribute(
                 name="voucherID",
                 type=dynamodb.AttributeType.STRING
