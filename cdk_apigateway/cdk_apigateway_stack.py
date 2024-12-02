@@ -68,9 +68,29 @@ class CdkApigatewayStack(Stack):
         # Añadir los métodos al API Gateway
         new.add_method(
             "POST", 
-            apigateway.LambdaIntegration(my_lambda1.lambda_function,proxy=False),
+            apigateway.LambdaIntegration(
+                my_lambda1.lambda_function,
+                proxy=False,
+                passthrough_behavior=apigateway.PassthroughBehavior.WHEN_NO_MATCH,
+                integration_responses=[
+                    apigateway.IntegrationResponse(
+                        status_code="200",
+                        response_templates={
+                            "application/json": "$input.body"
+                        }
+                    )
+                ]
+            ),
             authorization_type=apigateway.AuthorizationType.CUSTOM,
-            authorizer=authorizer
+            authorizer=authorizer,
+            method_responses=[
+                apigateway.MethodResponse(
+                    status_code="200",
+                    response_models={
+                        "application/json": apigateway.Model.EMPTY_MODEL
+                    }
+                )
+            ]
         )
     
         # Crear el mapping template
@@ -83,10 +103,27 @@ class CdkApigatewayStack(Stack):
             apigateway.LambdaIntegration(
                 my_lambda2.lambda_function,
                 proxy=False,
-                request_templates=mapping_template
+                request_templates=mapping_template,
+                passthrough_behavior=apigateway.PassthroughBehavior.WHEN_NO_MATCH,
+                integration_responses=[
+                    apigateway.IntegrationResponse(
+                        status_code="200",
+                        response_templates={
+                            "application/json": "$input.body"
+                        }
+                    )
+                ]
             ),
             authorization_type=apigateway.AuthorizationType.CUSTOM,
-            authorizer=authorizer
+            authorizer=authorizer,
+             method_responses=[
+                apigateway.MethodResponse(
+                    status_code="200",
+                    response_models={
+                        "application/json": apigateway.Model.EMPTY_MODEL
+                    }
+                )
+            ]
         )
         
         voucher_id.add_method(
@@ -94,13 +131,24 @@ class CdkApigatewayStack(Stack):
             apigateway.LambdaIntegration(
                 my_lambda3.lambda_function,
                 proxy=False,
-                request_templates=mapping_template
+                request_templates=mapping_template,
+                integration_responses=[
+                    apigateway.IntegrationResponse(
+                        status_code="200",
+                        response_templates={
+                            "application/json": "$input.body"
+                        }
+                    )
+                ]
             ),
             authorization_type=apigateway.AuthorizationType.CUSTOM,
-            authorizer=authorizer
-        )
-        #logging.info(f"Method GETVOUCHERBYCODE created with authorizer ID: {authorizer.ref}")
-        #print(f"Method GETVOUCHERBYCODE created with authorizer ID: {authorizer.ref}")
-        
-        
-
+            authorizer=authorizer,
+             method_responses=[
+                apigateway.MethodResponse(
+                    status_code="200",
+                    response_models={
+                        "application/json": apigateway.Model.EMPTY_MODEL
+                    }
+                )
+            ]
+        )   
