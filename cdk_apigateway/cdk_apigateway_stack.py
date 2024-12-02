@@ -1,14 +1,12 @@
 from aws_cdk import (
     # Duration,
     Stack,
-    aws_apigateway as apigateway,
+    aws_apigateway as apigateway
 )
 from constructs import Construct
 from cdk_apigateway.lambda_construct import LambdaConstruct
 from cdk_apigateway.voucher_table import VoucherTable
 from cdk_apigateway.api_gateway_construct import ApiGatewayConstruct
-from aws_cdk import aws_lambda as _lambda
-import logging
 
 class CdkApigatewayStack(Stack):
 

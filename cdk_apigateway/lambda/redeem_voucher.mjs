@@ -23,7 +23,7 @@ export const handler = async (event) => {
         const updateCommand = new UpdateCommand({
             TableName: tableName,
             Key: {
-                code: code
+                voucherID: code
             },
             UpdateExpression: 'SET #status = :status, dateRedemption = :dateRedemption',
             ExpressionAttributeNames: {
@@ -34,11 +34,12 @@ export const handler = async (event) => {
                 ':dateRedemption': new Date().toISOString(),
                 ':activeStatus': 'active'
             },
-            ConditionExpression: 'attribute_exists(code) AND #status = :activeStatus',
+            ConditionExpression: 'attribute_exists(voucherID) AND #status = :activeStatus',
             ReturnValues: 'ALL_NEW'
         });
 
-        console.log('Redeeming voucher in DynamoDB with code:', code);
+        console.log('Redeeming voucher in DynamoDB with voucherID:', code);
+        console.log('UpdateCommand:', JSON.stringify(updateCommand));
         const updateResponse = await docClient.send(updateCommand);
 
         console.log('Voucher redeemed successfully: ', JSON.stringify(updateResponse.Attributes));

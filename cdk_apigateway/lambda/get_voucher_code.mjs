@@ -20,7 +20,7 @@ export const handler = async (event) => {
 
         const getCommand = new GetCommand({
             TableName: tableName,
-            Key: {code: code}
+            Key: {voucherID: code}
         });
         console.log('Checking voucher code in :', code);
         console.log('GetCommand:', JSON.stringify(getCommand));
