@@ -1,10 +1,13 @@
-from aws_cdk import ( aws_lambda as lambda_, Stack)
+from aws_cdk import (
+    aws_lambda as lambda_,
+    aws_iam as iam,
+    BundlingOptions,
+    Stack)
 from constructs import Construct
-
-from aws_cdk import aws_iam as iam
+from cdk_apigateway.voucher_table import VoucherTable
 
 class LambdaConstruct(Construct):
-    def __init__(self, scope: Construct, id: str, handler_file: str, function_name: str, table_arn: str = None, environment: str=None, **kwargs):
+    def __init__(self, scope: Construct, id: str, handler_file: str, path_l: str, function_name: str,table: VoucherTable= None, environment: str=None, **kwargs):
         super().__init__(scope, id)
     
         self.lambda_function = lambda_.Function(
@@ -12,16 +15,15 @@ class LambdaConstruct(Construct):
             "LambdaFunction",
             runtime=lambda_.Runtime.NODEJS_22_X,
             handler=f"{handler_file.split('.')[0]}.handler",
-            code=lambda_.Code.from_asset("cdk_apigateway/lambda"),
+            code=lambda_.Code.from_asset(
+                path=path_l),
             function_name=function_name,
             environment=environment,
             **kwargs
         )
 
         # Agregar permisos para DynamoDB
-        if table_arn:
-            print(f"Adding policy for table ARN: {table_arn}")
-            self.lambda_function.add_to_role_policy(iam.PolicyStatement(
-                actions=["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:UpdateItem"],
-                resources=[table_arn]
-            ))
+        if table:
+            table.table.grant_read_write_data(self.lambda_function)
+            print(f"Added policy for table ARN: {table.table.table_arn}")
+

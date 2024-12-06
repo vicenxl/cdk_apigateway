@@ -29,8 +29,9 @@ class CdkApigatewayStack(Stack):
             self,
             "MyCustomLambda1",
             handler_file="new_voucher.mjs",
+            path_l="cdk_apigateway/src/new",
             function_name="voucherGeneratorLambda",
-            table_arn=voucher_table.table.table_arn,
+            table=voucher_table,
             environment=environment_l
         )
         print(f"Lambda ARN: {my_lambda1.lambda_function.function_arn}")
@@ -39,8 +40,9 @@ class CdkApigatewayStack(Stack):
             self,
             "MyCustomLambda2",
             handler_file="redeem_voucher.mjs",
+            path_l="cdk_apigateway/src/redeem",
             function_name="redeemVoucherLambda",  
-            table_arn=voucher_table.table.table_arn,
+            table=voucher_table,
             environment=environment_l
         )
         print(f"Lambda ARN: {my_lambda2.lambda_function.function_arn}")
@@ -49,8 +51,9 @@ class CdkApigatewayStack(Stack):
             self,
             "MyCustomLambda3",
             handler_file="get_voucher_code.mjs",
+            path_l="cdk_apigateway/src/get_info",
             function_name="getInfoVoucherByCodeLambda",
-            table_arn=voucher_table.table.table_arn,
+            table=voucher_table,
             environment=environment_l
         )
         print(f"Lambda ARN: {my_lambda3.lambda_function.function_arn}")
@@ -59,6 +62,7 @@ class CdkApigatewayStack(Stack):
             self,
             "MyCustomAuthorizerVouchers",
             handler_file="apigateway_authorizer.mjs",
+            path_l="cdk_apigateway/src/auth",
             function_name="apigatewayAuthorizerLambda"
         )
         print(f"Lambda ARN: {lambda_authorizer.lambda_function.function_arn}")
