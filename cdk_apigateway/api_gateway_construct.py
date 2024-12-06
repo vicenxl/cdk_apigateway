@@ -1,7 +1,10 @@
 from aws_cdk import (
+    RemovalPolicy,
     aws_apigateway as apigateway,
     aws_lambda as _lambda,
     Stack,
+    RemovalPolicy,
+    Duration,
     aws_iam as iam,
     aws_logs as logs
 )
@@ -18,8 +21,9 @@ class ApiGatewayConstruct(Construct):
             self,
             "ApiGatewayLogGroup",
             log_group_name="MyVoucherAPILogGroup",
-            retention=logs.RetentionDays.ONE_WEEK  # Retención de una semana
-            ) 
+            retention=logs.RetentionDays.ONE_WEEK,
+            removal_policy=RemovalPolicy.DESTROY
+        ) 
 
         # Crear el API Gateway REST API
         self.api = apigateway.RestApi(
@@ -41,8 +45,8 @@ class ApiGatewayConstruct(Construct):
                         status=True,
                         user=True,
                 ),
-                logging_level=apigateway.MethodLoggingLevel.INFO,  # Cambia a ERROR si lo prefieres
-                data_trace_enabled=True  # Registra cuerpo de solicitudes y respuestas
+                logging_level=apigateway.MethodLoggingLevel.INFO, 
+                data_trace_enabled=True 
             ),
             description='API Gateway Vouchers that managed the logic redemption burning coupons asociated with amounts of money'
         )
@@ -71,7 +75,8 @@ class ApiGatewayConstruct(Construct):
         authorizer = apigateway.TokenAuthorizer(
             self, authorizer_name,
             handler=authorizer_function,
-            identity_source="method.request.header.Authorization"
+            identity_source="method.request.header.Authorization",
+            results_cache_ttl=Duration.seconds(0)
         )
         return authorizer
 
