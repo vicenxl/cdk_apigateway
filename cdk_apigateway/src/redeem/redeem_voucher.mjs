@@ -1,7 +1,5 @@
-// index.mjs
-
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, UpdateCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, UpdateCommand, GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
@@ -9,8 +7,8 @@ const docClient = DynamoDBDocumentClient.from(client);
 export const handler = async (event) => {
     console.log('Event received:', JSON.stringify(event));
     const code = event.code;
-    try {
 
+    try {
         if (typeof code !== 'string' || code.trim() === '') 
             throw new Error('The field "code" is required for redemption!!');
 
@@ -20,22 +18,48 @@ export const handler = async (event) => {
         }
         console.log(`Table Name(ENV): ${tableName}`);
 
+        // Step 1: Query the table to get the `creationDate`
+        const queryCommand = new QueryCommand({
+            TableName: tableName,
+            KeyConditionExpression: "voucherID = :voucherID",
+            ExpressionAttributeValues: {
+                ":voucherID": code,
+            },
+        });
+
+        const queryResponse = await docClient.send(queryCommand);
+
+        if (queryResponse.Items.length === 0) {
+            return {
+                statusCode: 404,
+                body: JSON.stringify({
+                    message: 'Voucher not found!!',
+                }),
+            };
+        }
+
+        // Use the first matched creationDate
+        const creationDate = queryResponse.Items[0].creationDate;
+        console.log(`Found creationDate for voucher: ${creationDate}`);
+
+        // Step 2: Update the voucher
         const updateCommand = new UpdateCommand({
             TableName: tableName,
             Key: {
-                voucherID: code
+                voucherID: code,
+                creationDate: creationDate, // Include Sort Key
             },
             UpdateExpression: 'SET #status = :status, dateRedemption = :dateRedemption',
             ExpressionAttributeNames: {
-            '#status': 'status'
+                '#status': 'status',
             },
             ExpressionAttributeValues: {
                 ':status': 'redeemed',
                 ':dateRedemption': new Date().toISOString(),
-                ':activeStatus': 'active'
+                ':activeStatus': 'active',
             },
             ConditionExpression: 'attribute_exists(voucherID) AND #status = :activeStatus',
-            ReturnValues: 'ALL_NEW'
+            ReturnValues: 'ALL_NEW',
         });
 
         console.log('Redeeming voucher in DynamoDB with voucherID:', code);
@@ -48,7 +72,7 @@ export const handler = async (event) => {
             statusCode: 200,
             body: JSON.stringify({
                 message: 'Voucher redeemed successfully!!',
-                voucher: updateResponse.Attributes
+                voucher: updateResponse.Attributes,
             }),
         };
     } catch (error) {
@@ -60,17 +84,19 @@ export const handler = async (event) => {
         if (error.name === 'ConditionalCheckFailedException') {
             statusCode = 400;
             message = 'Voucher cannot be redeemed. It may not exist or is already redeemed.';
-             // Fetch the voucher details
-             try {
-                const getCommand = new GetCommand({
-                    TableName: process.env.TABLE_NAME,
-                    Key: {
-                        voucherID: code
-                    }
+
+            // Fetch the voucher details
+            try {
+                const queryCommand = new QueryCommand({
+                    TableName: tableName,
+                    KeyConditionExpression: "voucherID = :voucherID",
+                    ExpressionAttributeValues: {
+                        ":voucherID": code,
+                    },
                 });
-                console.log('getCommand:', JSON.stringify(getCommand));
-                const getResponse = await docClient.send(getCommand);
-                voucherDetails = getResponse.Item;
+
+                const queryResponse = await docClient.send(queryCommand);
+                voucherDetails = queryResponse.Items[0] || null;
             } catch (getError) {
                 console.error('Error fetching voucher details:', getError);
             }
@@ -81,7 +107,7 @@ export const handler = async (event) => {
             body: JSON.stringify({
                 message: message,
                 error: error.message,
-                voucher: voucherDetails
+                voucher: voucherDetails,
             }),
         };
     }
