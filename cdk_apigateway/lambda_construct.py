@@ -24,6 +24,6 @@ class LambdaConstruct(Construct):
 
         # Agregar permisos para DynamoDB
         if table:
-            table.table.grant_read_write_data(self.lambda_function)
-            print(f"Added policy for table ARN: {table.table.table_arn}")
+            table.table.grant_full_access(self.lambda_function)
+            print(f"Granted full access to DynamoDB table: {table.table.table_name}")
 

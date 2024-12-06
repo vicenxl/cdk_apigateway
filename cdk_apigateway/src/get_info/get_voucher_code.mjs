@@ -1,5 +1,5 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, QueryCommand} from "@aws-sdk/lib-dynamodb";
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
@@ -18,29 +18,35 @@ export const handler = async (event) => {
         }
         console.log(`Table Name(ENV): ${tableName}`);
 
-        const getCommand = new GetCommand({
+        const queryCommand = new QueryCommand({
             TableName: tableName,
-            Key: {voucherID: code}
+            KeyConditionExpression: "voucherID = :voucherID",
+            ExpressionAttributeValues: {
+                ":voucherID": code,
+            },
         });
-        console.log('Checking voucher code in :', code);
-        console.log('GetCommand:', JSON.stringify(getCommand));
-        const getResponse = await docClient.send(getCommand);
+        console.log('Checking voucher code:', code);
+        console.log('QueryCommand:', JSON.stringify(queryCommand));
 
-        if (!getResponse.Item) {
+        const queryResponse = await docClient.send(queryCommand);
+
+        // Handle case where no items are returned
+        if (!queryResponse.Items || queryResponse.Items.length === 0) {
+            console.log('No vouchers found for the given code.');
             return {
                 statusCode: 404,
                 body: JSON.stringify({
-                message: 'Voucher not found!!'
+                    message: 'Voucher not found!!',
                 }),
             };
         }
-        console.log('Data voucher returned:', JSON.stringify(getResponse.Item));
+        console.log('Data voucher returned:', JSON.stringify(queryResponse.Items[0]));
 
         return {
             statusCode: 200,
             body: JSON.stringify({
             message: 'Voucher retrieved successfully!!',
-            voucher: getResponse.Item
+            voucher: queryResponse.Items[0]
             }),
         };
     } catch (error) {
