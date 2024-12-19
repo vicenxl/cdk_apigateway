@@ -1,63 +1,67 @@
-<<<<<<< HEAD
-# cdk_apigateway
-Create an API REST to manage vouchers online in the infrastructure of AWS
-=======
 
-# Welcome to your CDK Python project!
+# CDK API Gateway Project
 
-This is a blank project for CDK development with Python.
+This project creates a REST API to manage vouchers using AWS infrastructure. It leverages the AWS CDK to provision resources like API Gateway, Lambda, and DynamoDB.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## Features
 
-This project is set up like a standard Python project.  The initialization
-process also creates a virtualenv within this project, stored under the `.venv`
-directory.  To create the virtualenv it assumes that there is a `python3`
-(or `python` for Windows) executable in your path with access to the `venv`
-package. If for any reason the automatic creation of the virtualenv fails,
-you can create the virtualenv manually.
+- **DynamoDB Table**: Stores voucher information with the table name `vouchers`.
+- **Lambda Functions**: Handles business logic for creating, reading, updating, and deleting vouchers.
+- **API Gateway**: Exposes the Lambda functions as REST endpoints.
 
-To manually create a virtualenv on MacOS and Linux:
+## Project Structure
 
-```
-$ python -m venv .venv
-```
+- `cdk_apigateway_stack.py`: Main stack definition, integrating all resources.
+- `lambda_construct.py`: Contains reusable constructs for defining Lambda functions.
+- `voucher_table.py`: Creates the DynamoDB table resource.
+- `api_gateway_construct.py`: Configures the API Gateway.
 
-After the init process completes and the virtualenv is created, you can use the following
-step to activate your virtualenv.
+## Prerequisites
 
-```
-$ source .venv/bin/activate
-```
+1. Install [AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html).
+2. Install Python dependencies:
 
-If you are a Windows platform, you would activate the virtualenv like this:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-```
-% .venv\Scripts\activate.bat
-```
+3. Configure your AWS credentials.
 
-Once the virtualenv is activated, you can install the required dependencies.
+## Deployment
 
-```
-$ pip install -r requirements.txt
-```
+1. Synthesize the CloudFormation template:
 
-At this point you can now synthesize the CloudFormation template for this code.
+    ```bash
+    cdk synth
+    ```
 
-```
-$ cdk synth
-```
+2. Deploy the stack:
 
-To add additional dependencies, for example other CDK libraries, just add
-them to your `setup.py` file and rerun the `pip install -r requirements.txt`
-command.
+    ```bash
+    cdk deploy
+    ```
 
-## Useful commands
+## API Endpoints
 
- * `cdk ls`          list all stacks in the app
- * `cdk synth`       emits the synthesized CloudFormation template
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk docs`        open CDK documentation
+The API exposes the following endpoints:
 
-Enjoy!
->>>>>>> 0972666 (Initial commit)
+- `POST /vouchers`: Creates a new voucher.
+- `GET /vouchers/{id}`: Retrieves a voucher by ID.
+- `PUT /vouchers/{id}`: Updates a voucher by ID.
+- `DELETE /vouchers/{id}`: Deletes a voucher by ID.
+
+## Useful Commands
+
+- `cdk ls`: List all stacks in the app.
+- `cdk synth`: Synthesize the CloudFormation template.
+- `cdk deploy`: Deploy the app to your AWS account.
+- `cdk destroy`: Remove the stack from your AWS account.
+
+## Notes
+
+- Ensure your AWS account has the necessary permissions to deploy the resources.
+- Modify `environment` variables in `cdk_apigateway_stack.py` to adapt to your region or table name.
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
